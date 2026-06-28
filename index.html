@@ -438,6 +438,9 @@ html[lang="en"] .game-title { font-size: 37.4px; }
 
 /* ── PORTRAIT (mobile) ───────────────────────────── */
 @media (orientation: portrait) {
+  .menu-btn{ font-size:12px; letter-spacing:0.01em; }
+  .home-menu{ width:100%; max-width:340px; box-sizing:border-box; column-gap:8px; }
+  .home-menu .menu-btn{ width:calc(50% - 4px); }
   .game-wrap { flex-direction: column; align-items: center; gap: 10px; }
   .panel { display: none; }
   .game-buttons { display: flex; }
@@ -451,7 +454,7 @@ html[lang="en"] .game-title { font-size: 37.4px; }
   .bb-status, .bb-msg { min-width: 0; padding: 0 10px; }
   .below-board .status-lbl { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .below-board .g-msg { font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .game-buttons .g-btn { height: 56px; font-size: 13px; line-height: 1.15; padding: 0 6px; display: flex; align-items: center; justify-content: center; white-space: pre-line; }
+  .game-buttons .g-btn { height: 56px; font-size: 12px; line-height: 1.15; padding: 0 6px; display: flex; align-items: center; justify-content: center; white-space: pre-line; }
   .mobile-info { display: flex; align-items: flex-start; gap: 4px; margin-top: 14px; }
 }
 
@@ -809,8 +812,8 @@ html[lang="en"] .game-title { font-size: 37.4px; }
   .vside-moves{ order:3; flex:1 1 0; min-width:0; width:auto; }
   .vgc-players{ font-size:10px; white-space:normal; line-height:1.2; }
   .vgc-meta{ font-size:10px; }
-  .vgames-controls{ width:312px; margin:14px auto 0; }
-  .vspeed-frame{ display:flex; flex-direction:row; align-items:center; justify-content:space-between; width:312px; margin:10px auto 0; border:none; background:none; padding:0; }
+  .vgames-controls{ width:auto; max-width:calc(100% - 16px); margin:14px auto 0; }
+  .vspeed-frame{ display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; width:auto; max-width:calc(100% - 16px); margin:10px auto 0; border:none; background:none; padding:0; }
   .vspeed-frame .vframe-title, .vspeed-frame .vframe-line{ display:none; }
   .vspeed-frame .vgames-back-m{ display:block; width:auto; flex:0 0 auto; }
   .vspeed-row{ flex:0 0 auto; gap:6px; }
@@ -1943,9 +1946,9 @@ function resizeViewerBoard(){
   var wrap=holder.querySelector('.board-wrap-game'); if(!wrap) return;
   var portrait=window.innerWidth<window.innerHeight;
   if(portrait){
-    var natural=660; var avail=Math.min(window.innerWidth-16, 460); var scale=Math.min(1, avail/natural);
+    var natural=660; var avail=Math.min(window.innerWidth-48, 460); var scale=Math.min(1, avail/natural);
     wrap.style.transformOrigin='top left'; wrap.style.transform='scale('+scale+')';
-    holder.style.width=(natural*scale)+'px'; holder.style.height=(natural*scale)+'px';
+    holder.style.width=(natural*scale)+'px'; holder.style.height=(natural*scale)+'px'; holder.style.margin='0 auto';
   } else {
     var natural2=660;
     var lgE=document.querySelector('#s-games .vside-games');
