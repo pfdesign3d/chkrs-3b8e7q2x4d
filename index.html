@@ -443,8 +443,10 @@ html[lang="en"] .game-title { font-size: 37.4px; }
   #s-home { justify-content: flex-start; padding-top: calc(34vh - 76px); }
   #s-settings, #s-stats { padding-top: calc(var(--menu-top) - 68px); }
   .below-board { height: 34px; }
-  .title-orn { width: 46px; height: 15px; --orn-dy: 3px; }
-  .title-row { gap: 8px; }
+  .title-orn { width: calc(46px * var(--title-k,1)); height: calc(15px * var(--title-k,1)); --orn-dy: 3px; }
+  .title-row { gap: calc(8px * var(--title-k,1)); }
+  .game-title { font-size: calc(44px * var(--title-k,1)); }
+  .game-subtitle { font-size: calc(14px * var(--title-k,1)); }
   .game-buttons { margin-top: 14px; }
   .bb-status, .bb-msg { min-width: 0; padding: 0 10px; }
   .below-board .status-lbl { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -1654,20 +1656,21 @@ window.addEventListener('resize',resizeBoard);
 window.addEventListener('orientationchange',function(){setTimeout(resizeBoard,150);});
 function fitTitle(){
   var portrait=window.innerWidth<window.innerHeight;
-  var rows=document.querySelectorAll('.title-row');
-  for(var i=0;i<rows.length;i++){
-    var row=rows[i];
-    if(!portrait){ row.style.transform=''; row.style.transformOrigin=''; continue; }
-    var __ac=document.querySelector(".screen.active");
-    var __be=__ac?__ac.querySelector(".board-stack, #vboard-holder"):null;
-    var __bw=__be?__be.getBoundingClientRect().width:0;
-    var scale=__bw>1?(__bw/660):Math.min(1,(window.innerWidth-14)/660);
-    var frameW=584*scale;
+  var screens=document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++){
+    var sc=screens[i];
+    var row=sc.querySelector('.title-row');
+    if(!row) continue;
+    if(!portrait){ sc.style.removeProperty('--title-k'); continue; }
+    sc.style.setProperty('--title-k','1');
     var natural=row.offsetWidth;
     if(!natural) continue;
-    var f=Math.min(1, frameW/natural);
-    row.style.transform='scale('+f+')';
-    row.style.transformOrigin='center top';
+    var be=sc.querySelector('.board-stack, #vboard-holder');
+    var bw=be?be.getBoundingClientRect().width:0;
+    var bscale=bw>1?(bw/660):Math.min(1,(window.innerWidth-14)/660);
+    var frameW=584*bscale;
+    var k=Math.min(1, frameW/natural);
+    sc.style.setProperty('--title-k', (''+k));
   }
 }
 window.addEventListener('resize',fitTitle);
