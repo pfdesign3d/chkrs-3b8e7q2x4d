@@ -1506,6 +1506,7 @@ function autoDraw(reasonKey){
   gameOver=true; hasActiveGame=false; stopTimer(); render();
   if(gameMode==='ai') recordResult('draw');
   setTimeout(()=>{ setMsg(t(reasonKey)); },400);
+  setTimeout(showAd,1500);
 }
 
 function endGame(playerWon){
@@ -1516,12 +1517,14 @@ function endGame(playerWon){
   setTimeout(()=>{
     setMsg(playerWon?t('youWin'):t('youLose'));
   },400);
+  setTimeout(showAd,1500);
 }
 function endGame2p(winner){
   gameOver=true; hasActiveGame=false;
   if(winner==='w') scorePlayer++; else scoreAI++;
   stopTimer(); render();
   setTimeout(()=>{ setMsg(winner==='w'?t('whiteWins'):t('blackWins')); },400);
+  setTimeout(showAd,1500);
 }
 async function declareDraw(){
   if(gameOver) return;
@@ -1533,6 +1536,7 @@ async function declareDraw(){
   gameOver=true; hasActiveGame=false; stopTimer(); render();
   if(gameMode==='ai') recordResult('draw');
   setTimeout(()=>{ setMsg(t('drawMsg')); },400);
+  setTimeout(showAd,1500);
 }
 
 // ══ UNDO ══════════════════════════════════════════
@@ -1603,7 +1607,19 @@ function loadGame(){
     return true;
   }catch(e){ return false; }
 }
+// == VK ADS (interstitial, лимит 3 мин между показами) ==
+var __lastAdTs=0;
+function showAd(){
+  try{
+    var now=Date.now();
+    if(now-__lastAdTs<180000) return;
+    if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return;
+    __lastAdTs=now;
+    vkBridge.send('VKWebAppShowNativeAds',{ad_format:'interstitial'}).catch(function(){});
+  }catch(e){}
+}
 function newGame(){
+  showAd();
   board=[];
   for(let r=0;r<8;r++){
     board.push([]);
