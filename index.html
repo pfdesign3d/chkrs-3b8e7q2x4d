@@ -44,7 +44,7 @@
 /* безопасный storage (ES5) */
 (function(){
   function safeGet(k, fb){ try{ var v=window.localStorage && window.localStorage.getItem(k); return (v===null||typeof v==='undefined')?fb:v; }catch(e){ return fb; } }
-  var CLOUD_KEYS=['checkers_settings','checkers_stats','checkers_lang','checkers_theme','checkers_game']; function cloudSet(k, v){ try{ if(CLOUD_KEYS.indexOf(k)<0) return; if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return; v=(v==null)?'':(''+v); if(k==='checkers_game' && v){ try{ var g=JSON.parse(v); delete g.stateStack; delete g.posCounts; delete g.histCount; v=JSON.stringify(g); }catch(e){} } if(v.length>4000) return; vkBridge.send('VKWebAppStorageSet',{key:k,value:v}).catch(function(){}); }catch(e){} } function safeSet(k, v){ try{ if(window.localStorage) window.localStorage.setItem(k, v); }catch(e){} cloudSet(k, v); }
+  var CLOUD_KEYS=['checkers_settings','checkers_stats','checkers_lang','checkers_theme','checkers_game']; function cloudSet(k, v){ try{ if(!window.__cloudReady) return; if(CLOUD_KEYS.indexOf(k)<0) return; if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return; v=(v==null)?'':(''+v); if(k==='checkers_game' && v){ try{ var g=JSON.parse(v); delete g.stateStack; delete g.posCounts; delete g.histCount; v=JSON.stringify(g); }catch(e){} } if(v.length>4000) return; vkBridge.send('VKWebAppStorageSet',{key:k,value:v}).catch(function(){}); }catch(e){} } function safeSet(k, v){ try{ if(window.localStorage) window.localStorage.setItem(k, v); }catch(e){} cloudSet(k, v); }
   function safeRemove(k){ try{ if(window.localStorage) window.localStorage.removeItem(k); }catch(e){} cloudSet(k, ''); }
   window.safeGet=safeGet; window.safeSet=safeSet; window.safeRemove=safeRemove; window.cloudSet=cloudSet; window.CLOUD_KEYS=CLOUD_KEYS;
   try{var __wd=0,__wt=setInterval(function(){try{if(!document.querySelector('.screen.active')){var h=document.getElementById('s-home');if(h)h.classList.add('active');}}catch(e){} if(++__wd>20)clearInterval(__wt);},500);}catch(e){}
@@ -2008,6 +2008,7 @@ function cloudPull(){
     if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return;
     vkBridge.send('VKWebAppStorageGet',{keys:CLOUD_KEYS}).then(function(res){
       try{
+        window.__cloudReady=true;
         var kv={}, arr=(res&&res.keys)||[], i, k;
         for(i=0;i<arr.length;i++){ if(arr[i]&&arr[i].key) kv[arr[i].key]=arr[i].value||''; }
         function put(k,v){ try{ if(window.localStorage) localStorage.setItem(k,v); }catch(e){} }
@@ -2019,10 +2020,11 @@ function cloudPull(){
         if(kv.checkers_stats && kv.checkers_stats!==loc('checkers_stats')){ put('checkers_stats',kv.checkers_stats); loadStats(); }
         if(kv.checkers_game && !hasActiveGame){ put('checkers_game',kv.checkers_game); loadGame(); updateResumeBtn(); }
       }catch(e){}
-    }).catch(function(){});
+    }).catch(function(){ window.__cloudReady=true; });
   }catch(e){}
 }
 setTimeout(cloudPull, 400);
+setTimeout(function(){ window.__cloudReady=true; }, 6000);
 function bootVK(){
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
 }
