@@ -44,9 +44,9 @@
 /* безопасный storage (ES5) */
 (function(){
   function safeGet(k, fb){ try{ var v=window.localStorage && window.localStorage.getItem(k); return (v===null||typeof v==='undefined')?fb:v; }catch(e){ return fb; } }
-  function safeSet(k, v){ try{ if(window.localStorage) window.localStorage.setItem(k, v); }catch(e){} }
-  function safeRemove(k){ try{ if(window.localStorage) window.localStorage.removeItem(k); }catch(e){} }
-  window.safeGet=safeGet; window.safeSet=safeSet; window.safeRemove=safeRemove;
+  var CLOUD_KEYS=['checkers_settings','checkers_stats','checkers_lang','checkers_theme','checkers_game']; function cloudSet(k, v){ try{ if(CLOUD_KEYS.indexOf(k)<0) return; if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return; v=(v==null)?'':(''+v); if(k==='checkers_game' && v){ try{ var g=JSON.parse(v); delete g.stateStack; delete g.posCounts; delete g.histCount; v=JSON.stringify(g); }catch(e){} } if(v.length>4000) return; vkBridge.send('VKWebAppStorageSet',{key:k,value:v}).catch(function(){}); }catch(e){} } function safeSet(k, v){ try{ if(window.localStorage) window.localStorage.setItem(k, v); }catch(e){} cloudSet(k, v); }
+  function safeRemove(k){ try{ if(window.localStorage) window.localStorage.removeItem(k); }catch(e){} cloudSet(k, ''); }
+  window.safeGet=safeGet; window.safeSet=safeSet; window.safeRemove=safeRemove; window.cloudSet=cloudSet; window.CLOUD_KEYS=CLOUD_KEYS;
   try{var __wd=0,__wt=setInterval(function(){try{if(!document.querySelector('.screen.active')){var h=document.getElementById('s-home');if(h)h.classList.add('active');}}catch(e){} if(++__wd>20)clearInterval(__wt);},500);}catch(e){}
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
   try{ setTimeout(function(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppResizeWindow', {width:1000, height:820}).catch(function(){}); }catch(e){} }, 500); }catch(e){}
@@ -2003,6 +2003,26 @@ function resizeViewerBoard(){
 }
 window.addEventListener('resize', function(){ var s=document.getElementById('s-games'); if(s && s.classList.contains('active')) resizeViewerBoard(); });
 function openGames(){ showScreen('s-games'); if(viewerGameIndex<0){ selectGame(0); } else { buildGamesList(); renderViewer(); } setTimeout(resizeViewerBoard,80); }
+function cloudPull(){
+  try{
+    if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return;
+    vkBridge.send('VKWebAppStorageGet',{keys:CLOUD_KEYS}).then(function(res){
+      try{
+        var kv={}, arr=(res&&res.keys)||[], i, k;
+        for(i=0;i<arr.length;i++){ if(arr[i]&&arr[i].key) kv[arr[i].key]=arr[i].value||''; }
+        function put(k,v){ try{ if(window.localStorage) localStorage.setItem(k,v); }catch(e){} }
+        function loc(k){ try{ return (window.localStorage && localStorage.getItem(k))||''; }catch(e){ return ''; } }
+        for(i=0;i<CLOUD_KEYS.length;i++){ k=CLOUD_KEYS[i]; if(!kv[k] && loc(k)) cloudSet(k, loc(k)); }
+        if(kv.checkers_lang && kv.checkers_lang!==loc('checkers_lang')){ put('checkers_lang',kv.checkers_lang); loadLang(); }
+        if(kv.checkers_theme && kv.checkers_theme!==loc('checkers_theme')){ put('checkers_theme',kv.checkers_theme); loadTheme(); }
+        if(kv.checkers_settings && kv.checkers_settings!==loc('checkers_settings')){ put('checkers_settings',kv.checkers_settings); loadSettings(); }
+        if(kv.checkers_stats && kv.checkers_stats!==loc('checkers_stats')){ put('checkers_stats',kv.checkers_stats); loadStats(); }
+        if(kv.checkers_game && !hasActiveGame){ put('checkers_game',kv.checkers_game); loadGame(); updateResumeBtn(); }
+      }catch(e){}
+    }).catch(function(){});
+  }catch(e){}
+}
+setTimeout(cloudPull, 400);
 function bootVK(){
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
 }
