@@ -1610,8 +1610,12 @@ function showAd(){
     var now=Date.now();
     if(now-__lastAdTs<180000) return;
     if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return;
-    __lastAdTs=now;
-    vkBridge.send('VKWebAppShowNativeAds',{ad_format:'interstitial'}).then(function(){ try{ vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }).catch(function(){});
+    vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).then(function(res){
+      if(!res || !res.result) return;
+      if(Date.now()-__lastAdTs<180000) return;
+      __lastAdTs=Date.now();
+      vkBridge.send('VKWebAppShowNativeAds',{ad_format:'interstitial'}).then(function(){ try{ vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }).catch(function(){});
+    }).catch(function(){});
   }catch(e){}
 }
 function newGame(){
