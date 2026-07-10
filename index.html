@@ -1608,7 +1608,7 @@ function loadGame(){
   }catch(e){ return false; }
 }
 // == VK ADS (interstitial, лимит 3 мин между показами) ==
-var __lastAdTs=0;
+var __lastAdTs=Date.now();
 function showAd(){
   try{
     var now=Date.now();
