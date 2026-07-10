@@ -1620,7 +1620,6 @@ function showAd(){
   }catch(e){}
 }
 function newGame(){
-  showAd();
   board=[];
   for(let r=0;r<8;r++){
     board.push([]);
@@ -2028,6 +2027,8 @@ setTimeout(cloudPull, 400);
 setTimeout(function(){ window.__cloudReady=true; }, 6000);
 function preloadAd(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }
 setTimeout(preloadAd, 3000);
+function showBanner(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppShowBannerAd',{banner_location:'bottom'}).catch(function(){}); }catch(e){} }
+setTimeout(showBanner, 90000);
 function bootVK(){
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
 }
