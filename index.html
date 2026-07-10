@@ -1506,7 +1506,6 @@ function autoDraw(reasonKey){
   gameOver=true; hasActiveGame=false; stopTimer(); render();
   if(gameMode==='ai') recordResult('draw');
   setTimeout(()=>{ setMsg(t(reasonKey)); },400);
-  setTimeout(showAd,1500);
 }
 
 function endGame(playerWon){
@@ -1517,14 +1516,12 @@ function endGame(playerWon){
   setTimeout(()=>{
     setMsg(playerWon?t('youWin'):t('youLose'));
   },400);
-  setTimeout(showAd,1500);
 }
 function endGame2p(winner){
   gameOver=true; hasActiveGame=false;
   if(winner==='w') scorePlayer++; else scoreAI++;
   stopTimer(); render();
   setTimeout(()=>{ setMsg(winner==='w'?t('whiteWins'):t('blackWins')); },400);
-  setTimeout(showAd,1500);
 }
 async function declareDraw(){
   if(gameOver) return;
@@ -1536,7 +1533,6 @@ async function declareDraw(){
   gameOver=true; hasActiveGame=false; stopTimer(); render();
   if(gameMode==='ai') recordResult('draw');
   setTimeout(()=>{ setMsg(t('drawMsg')); },400);
-  setTimeout(showAd,1500);
 }
 
 // ══ UNDO ══════════════════════════════════════════
@@ -1615,7 +1611,7 @@ function showAd(){
     if(now-__lastAdTs<180000) return;
     if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return;
     __lastAdTs=now;
-    vkBridge.send('VKWebAppShowNativeAds',{ad_format:'interstitial'}).catch(function(){});
+    vkBridge.send('VKWebAppShowNativeAds',{ad_format:'interstitial'}).then(function(){ try{ vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }).catch(function(){});
   }catch(e){}
 }
 function newGame(){
@@ -2025,6 +2021,8 @@ function cloudPull(){
 }
 setTimeout(cloudPull, 400);
 setTimeout(function(){ window.__cloudReady=true; }, 6000);
+function preloadAd(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }
+setTimeout(preloadAd, 3000);
 function bootVK(){
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
 }
