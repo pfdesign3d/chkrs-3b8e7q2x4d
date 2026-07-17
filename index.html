@@ -49,7 +49,7 @@
   window.safeGet=safeGet; window.safeSet=safeSet; window.safeRemove=safeRemove; window.cloudSet=cloudSet; window.CLOUD_KEYS=CLOUD_KEYS;
   try{var __wd=0,__wt=setInterval(function(){try{if(!document.querySelector('.screen.active')){var h=document.getElementById('s-home');if(h)h.classList.add('active');}}catch(e){} if(++__wd>20)clearInterval(__wt);},500);}catch(e){}
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
-  try{ setTimeout(function(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppResizeWindow', {width:1000, height:820}).catch(function(){}); }catch(e){} }, 500); }catch(e){}
+  try{ var __mob=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||/vk_platform=(mobile|iphone|android)/i.test(location.search); if(!__mob){ setTimeout(function(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppResizeWindow', {width:1000, height:820}).catch(function(){}); }catch(e){} }, 500); } }catch(e){}
 })();
 </script>
 
@@ -61,6 +61,9 @@ html { -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-ad
   --font-body: 'Segoe UI', system-ui, sans-serif;
   --font-num: 'Segoe UI', system-ui, sans-serif;
   --menu-top: 24vh;
+  --app-height: 100vh;
+  --ad-bottom: 0px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* ── BASE ── */
   --bg: #101717;
@@ -125,7 +128,8 @@ body {
   -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   font-family: var(--font-body);
   color: var(--text);
-  min-height: 100vh;
+  min-height: var(--app-height, 100vh);
+  height: var(--app-height, 100vh);
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -142,6 +146,8 @@ body {
   opacity: 0; pointer-events: none;
   transition: opacity .35s ease;
   padding: 20px;
+  padding-bottom: calc(20px + var(--ad-bottom, 0px) + var(--safe-bottom, 0px));
+  min-height: var(--app-height, 100vh);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -559,6 +565,11 @@ html[lang="en"] .game-title { font-size: 37.4px; }
 [data-theme="light"] body{ background: radial-gradient(135% 100% at 50% 42%, #f7f4ee 0%, #d9c9ae 78%); }
 [data-theme="light"] .g-card{ background:#faf9f5; }
 [data-theme="light"] .bb-status, [data-theme="light"] .bb-msg{ background:#faf9f5; }
+html.ios-ad-visible #s-game{ padding-top: calc(8px + env(safe-area-inset-top,0px)); }
+html.ios-ad-visible #s-game .title-block{ height:48px; margin-bottom:8px; }
+html.ios-ad-visible #s-game .below-board{ margin-top:10px; }
+html.ios-ad-visible #s-game .game-buttons{ margin-top:8px; }
+html.ios-ad-visible #s-game .mobile-info{ margin-top:8px; }
 </style>
 </head>
 <body>
@@ -1650,14 +1661,25 @@ function resizeBoard(){
   const portrait=window.innerWidth<window.innerHeight;
   if(portrait){
     const available=window.innerWidth-14;
-    const scale=Math.min(1,available/660);
-    wrap.style.transform='scale('+scale+')';
-    wrap.style.transformOrigin='top center';
-    wrap.style.marginBottom=Math.round((scale-1)*wrap.offsetHeight)+'px';
-    const w=Math.round(660*scale)+'px';
-    if(below) below.style.width=w;
-    if(btns) btns.style.width=w;
-    if(info) info.style.width=w;
+    wrap.style.transform=''; var __nH0=wrap.offsetHeight;
+    var scale=Math.min(1,available/660);
+    var __apply=function(sc){ wrap.style.transform='scale('+sc+')'; wrap.style.transformOrigin='top center'; wrap.style.marginBottom=Math.round((sc-1)*__nH0)+'px'; var w=Math.round(660*sc)+'px'; if(below)below.style.width=w; if(btns)btns.style.width=w; if(info)info.style.width=w; };
+    __apply(scale);
+    var __cs=getComputedStyle(document.documentElement);
+    var reserve=(parseInt(__cs.getPropertyValue('--ad-bottom'))||0)+(parseInt(__cs.getPropertyValue('--safe-bottom'))||0)+8;
+    var vpH=(window.visualViewport?window.visualViewport.height:window.innerHeight);
+    var __sg=document.getElementById('s-game');
+    if(__sg && __sg.classList.contains('active')){
+      var __lb=function(el){ if(!el) return 0; var c=getComputedStyle(el); if(c.display==='none') return 0; return el.getBoundingClientRect().bottom; };
+      for(var __it=0; __it<7; __it++){
+        var __bottom=Math.max(__lb(below),__lb(btns),__lb(info));
+        var __over=__bottom-(vpH-reserve);
+        if(__over<=1) break;
+        var __cur=__nH0*scale;
+        scale=Math.max(0.35, scale*(__cur-__over)/__cur);
+        __apply(scale);
+      }
+    }
   } else {
     wrap.style.transform='';
     wrap.style.transformOrigin='';
@@ -1671,6 +1693,14 @@ function resizeBoard(){
 }
 window.addEventListener('resize',resizeBoard);
 window.addEventListener('orientationchange',function(){setTimeout(resizeBoard,150);});
+function getViewportHeight(){ return window.visualViewport?window.visualViewport.height:window.innerHeight; }
+function isIOSLike(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+function updateViewportVars(){ try{ document.documentElement.style.setProperty('--app-height', getViewportHeight()+'px'); }catch(e){} setTimeout(function(){ try{resizeBoard();}catch(e){} try{ if(typeof resizeViewerBoard==='function') resizeViewerBoard(); }catch(e){} try{ if(typeof fitTitle==='function') fitTitle(); }catch(e){} },50); }
+var IOS_BANNER_RESERVE=96;
+function setAdBottom(px){ try{ document.documentElement.style.setProperty('--ad-bottom', px+'px'); document.documentElement.classList.toggle('ios-ad-visible', px>0 && isIOSLike()); }catch(e){} setTimeout(updateViewportVars,100); }
+window.addEventListener('resize', updateViewportVars);
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', updateViewportVars); window.visualViewport.addEventListener('scroll', updateViewportVars); }
+updateViewportVars();
 function fitTitle(){
   var portrait=window.innerWidth<window.innerHeight;
   var screens=document.querySelectorAll('.screen');
@@ -2028,7 +2058,7 @@ setTimeout(cloudPull, 400);
 setTimeout(function(){ window.__cloudReady=true; }, 6000);
 function preloadAd(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(function(){}); }catch(e){} }
 setTimeout(preloadAd, 3000);
-function showBanner(){ try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppShowBannerAd',{banner_location:'bottom'}).catch(function(){}); }catch(e){} }
+function showBanner(){ try{ if(typeof vkBridge==='undefined'||!vkBridge||!vkBridge.send) return; vkBridge.send('VKWebAppShowBannerAd',{banner_location:'bottom'}).then(function(){ setAdBottom(isIOSLike()?IOS_BANNER_RESERVE:0); }).catch(function(){}); }catch(e){} }
 setTimeout(showBanner, 90000);
 function bootVK(){
   try{ if(typeof vkBridge!=='undefined' && vkBridge && vkBridge.send) vkBridge.send('VKWebAppInit').catch(function(){}); }catch(e){}
