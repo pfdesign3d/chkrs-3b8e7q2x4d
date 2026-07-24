@@ -2069,6 +2069,10 @@ function resizeViewerBoard(){
   }
   var lg=document.querySelector('#s-games .vside-games'), mv=document.querySelector('#s-games .vside-moves');
   if(mv){ mv.style.height = (portrait && lg) ? (lg.offsetHeight+'px') : ''; }
+  try{ var __bh=holder.offsetHeight;
+    if(!portrait && __bh>0){ if(lg) lg.style.height=Math.round(__bh)+'px'; if(mv) mv.style.height=Math.round(__bh)+'px'; }
+    else if(lg){ lg.style.height=''; }
+  }catch(e){}
   try{ fitTitle(); }catch(e){}
 }
 window.addEventListener('resize', function(){ var s=document.getElementById('s-games'); if(s && s.classList.contains('active')) resizeViewerBoard(); });
